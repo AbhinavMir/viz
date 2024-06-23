@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Three.js Bell Jar Vase with Crystals and Silicon Ingot</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #crossSectionButton,
+        #dropCrystalButton,
+        #lowerSiliconIngotButton,
+        #lightFurnaceButton {
+            position: absolute;
+            top: 10px;
+            z-index: 100;
+        }
+
+        #pullIngotButton {
+            position: absolute;
+            top: 10px;
+            left: 570px;
+            z-index: 100;
+        }
+
+        #crossSectionButton {
+            left: 10px;
+        }
+
+        #dropCrystalButton {
+            left: 150px;
+        }
+
+        #lowerSiliconIngotButton {
+            left: 290px;
+        }
+
+        #lightFurnaceButton {
+            left: 430px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <button id="crossSectionButton">Toggle Cross Section</button>
+    <button id="lightFurnaceButton">Light up the Furnace</button>
+    <button id="dropCrystalButton">Drop Silicon</button>
+    <button id="lowerSiliconIngotButton">Lower Silicon Ingot</button>
+    <button id="pullIngotButton" disabled>Pull Ingot</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let ingotDropped = false;
+        let seedDropped = false;
+        let burnerOn = false;
+        let isPulling = false;
+        let seedCrystal;
+        let siliconIngot;
+
+        // We'll import OrbitControls dynamically
+        import('https://unpkg.com/three@0.112.1/examples/jsm/controls/OrbitControls.js').then((module) => {
+            const OrbitControls = module.OrbitControls;
+
+            // Initialize Three.js
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            // Create bell jar vase geometry (outer cylinder)
+            const geometry = new THREE.CylinderGeometry(3, 3, 5, 32, 1, true);
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x00ff00,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+
+            const vase = new THREE.Mesh(geometry, material);
+            scene.add(vase);
+
+            // Create a vase inside the bell jar with a gap
+            const innerGeometry = new THREE.CylinderGeometry(2.5, 2.5, 4.9, 32, 1, true);
+
+            const innerMaterial = new THREE.MeshPhongMaterial({
+                color: 0xff0000,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const innerVase = new THREE.Mesh(innerGeometry, innerMaterial);
+            scene.add(innerVase);
+
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0xffffff, 1);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+
+            // Add point light to camera
+            const cameraLight = new THREE.PointLight(0xffffff, 0.8);
+            cameraLight.position.set(0, 0, 0); // Light position relative to camera
+            camera.add(cameraLight);
+            scene.add(camera); // Add camera to scene so the light moves with it
+
+            // Position the camera
+            camera.position.set(0, 0, 20);
+            camera.lookAt(scene.position);
+
+            // Add OrbitControls
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Cross-section plane
+            const planeGeometry = new THREE.PlaneGeometry(10, 10);
+            const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xcccccc, side: THREE.DoubleSide });
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.rotation.y = Math.PI / 2;
+            plane.visible = false;
+            scene.add(plane);
+
+            // Create lava inside the inner crucible
+            const lavaGeometry = new THREE.CylinderGeometry(2.4, 2.4, 4.5 * 0.2, 32, 1, true);
+            const lavaMaterial = new THREE.MeshPhongMaterial({
+                color: 0xff0000,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            const lava = new THREE.Mesh(lavaGeometry, lavaMaterial);
+            lava.position.y = -2.45; // Position at the bottom of the inner crucible
+            scene.add(lava);
+
+            // Create base for the inner crucible
+            const baseGeometry = new THREE.CylinderGeometry(2.5, 2.5, 0.2, 32);
+            const baseMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 }); // Brown color
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.position.y = -3.5; // Position at the bottom of the inner crucible
+            scene.add(base);
+
+            // Toggle cross-section function
+            let isCrossSectionVisible = false;
+            function toggleCrossSection() {
+                isCrossSectionVisible = !isCrossSectionVisible;
+
+                if (isCrossSectionVisible) {
+                    vase.material.clippingPlanes = [new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0)];
+                    innerVase.material.clippingPlanes = [new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0)];
+                    lava.material.clippingPlanes = [new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0)];
+                    base.material.clippingPlanes = [new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0)];
+                    renderer.localClippingEnabled = true;
+                } else {
+                    vase.material.clippingPlanes = [];
+                    innerVase.material.clippingPlanes = [];
+                    lava.material.clippingPlanes = [];
+                    base.material.clippingPlanes = [];
+                    renderer.localClippingEnabled = false;
+                }
+            }
+
+            // Function to create and drop a crystal
+            function dropCrystal() {
+                const crystalGeometry = new THREE.TetrahedronGeometry(0.2);
+                const crystalMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                seedCrystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+
+                // Set initial position above the lava
+                seedCrystal.position.set(
+                    (Math.random() - 0.5) * 2,
+                    5,
+                    (Math.random() - 0.5) * 2
+                );
+
+                scene.add(seedCrystal);
+
+                // Animate the crystal falling
+                function animateCrystal() {
+                    if (seedCrystal.position.y > -2.45) {
+                        seedCrystal.position.y -= 0.05;
+                        seedCrystal.rotation.x += 0.05;
+                        seedCrystal.rotation.z += 0.05;
+                        requestAnimationFrame(animateCrystal);
+                    }
+                }
+
+                seedDropped = true;
+                checkPullIngotConditions();
+                animateCrystal();
+            }
+
+            // Create silicon ingot and rod
+            const ingotGeometry = new THREE.BoxGeometry(0.5, 0.2, 0.1);
+            const ingotMaterial = new THREE.MeshPhongMaterial({ color: 0xf0f0f0 }); // Off-white color
+            const ingot = new THREE.Mesh(ingotGeometry, ingotMaterial);
+
+            const rodGeometry = new THREE.CylinderGeometry(0.02, 0.02, 2, 32);
+            const rodMaterial = new THREE.MeshPhongMaterial({ color: 0x0000ff }); // Blue color
+            const rod = new THREE.Mesh(rodGeometry, rodMaterial);
+
+            const siliconIngotGroup = new THREE.Group();
+            siliconIngotGroup.add(ingot);
+            siliconIngotGroup.add(rod);
+
+            ingot.position.y = -1;
+            rod.position.y = 0;
+
+            siliconIngotGroup.position.set(0, 6, 0); // Initial position above the vase
+            scene.add(siliconIngotGroup);
+
+            // Function to lower the silicon ingot
+            function lowerSiliconIngot() {
+                siliconIngot = siliconIngotGroup;
+
+                function animateIngot() {
+                    if (siliconIngot.position.y > -2.25) {
+                        siliconIngot.position.y -= 0.05;
+                        requestAnimationFrame(animateIngot);
+                    }
+                }
+
+                ingotDropped = true;
+                checkPullIngotConditions();
+                animateIngot();
+            }
+
+            const particleCount = 1000;
+            const particles = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = Math.random() * 2 - 1;
+                positions[i + 1] = Math.random() * 3;
+                positions[i + 2] = Math.random() * 2 - 1;
+
+                colors[i] = Math.random();
+                colors[i + 1] = Math.random() * 0.5;
+                colors[i + 2] = 0;
+            }
+
+            particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particles.setAttribute('color', new THREE.BufferAttribute(colors, 1));
+
+            // Create particle material
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 0.05,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending,
+                transparent: true
+            });
+
+            // Create particle system
+            const particleSystem = new THREE.Points(particles, particleMaterial);
+            particleSystem.position.y = -6; // Position below the base
+            particleSystem.visible = false; // Initially hidden
+            scene.add(particleSystem);
+
+            // Function to toggle fire
+            function toggleFire() {
+                particleSystem.visible = !particleSystem.visible;
+
+                burnerOn = particleSystem.visible;
+                checkPullIngotConditions();
+            }
+
+            function checkPullIngotConditions() {
+                const pullIngotButton = document.getElementById('pullIngotButton');
+                if (ingotDropped && seedDropped && burnerOn) {
+                    pullIngotButton.disabled = false;
+                } else {
+                    pullIngotButton.disabled = true;
+                }
+            }
+
+            function pullIngot() {
+                if (!isPulling) {
+                    isPulling = true;
+
+                    // Determine which object to use as the base for growing crystal
+                    let baseObject = seedDropped ? seedCrystal : siliconIngot;
+
+                    // Remove the original object from the scene
+
+                    // Create a larger silicon crystal based on the original object's position
+                    // scene.remove(ingot)
+                    siliconIngotGroup.remove(ingot)
+                    const largeIngotGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 32);
+                    const largeIngotMaterial = new THREE.MeshPhongMaterial({ color: 0xf0f0f0 });
+                    const largeIngot = new THREE.Mesh(largeIngotGeometry, largeIngotMaterial);
+
+                    largeIngot.position.copy(baseObject.position);
+                    scene.add(largeIngot);
+
+                    siliconIngotGroup.add(largeIngot);
+                    function animatePull() {
+                        if (largeIngot.position.y < 5
+
+                            && largeIngot.scale.y < 10
+                            && largeIngot.scale.x < 10
+                            && largeIngot.scale.z < 10
+                        ) {
+                            siliconIngotGroup.position.y += 0.01;
+                            largeIngot.scale.y += 0.05; // Grow the crystal as it's pulled
+                            largeIngot.scale.x += 0.005; // Slight increase in width
+                            largeIngot.scale.z += 0.005; // Slight increase in depth
+                            requestAnimationFrame(animatePull);
+                        } else if (largeIngot.position.y < 5) {
+                            largeIngot.position.y += 0.01;
+                            requestAnimationFrame(animatePull);
+                        } 
+                        else {
+                            isPulling = false;
+                        }
+                    }
+
+                    animatePull();
+                }
+            }
+
+            // Add event listeners
+            document.getElementById('crossSectionButton').addEventListener('click', toggleCrossSection);
+            document.getElementById('dropCrystalButton').addEventListener('click', dropCrystal);
+            document.getElementById('lowerSiliconIngotButton').addEventListener('click', lowerSiliconIngot);
+            document.getElementById('lightFurnaceButton').addEventListener('click', toggleFire);
+            document.getElementById('pullIngotButton').addEventListener('click', pullIngot);
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+
+                // Animate fire particles
+                if (particleSystem.visible) {
+                    const positions = particles.attributes.position.array;
+                    for (let i = 0; i < particleCount * 3; i += 3) {
+                        positions[i + 1] += 0.01 + Math.random() * 0.02;
+                        if (positions[i + 1] > 3) {
+                            positions[i + 1] = 0;
+                        }
+                    }
+                    particles.attributes.position.needsUpdate = true;
+                }
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+    </script>
+</body>
+
+</html>
