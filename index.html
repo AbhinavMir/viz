@@ -199,7 +199,26 @@
                 seedDropped = true;
                 checkPullIngotConditions();
                 animateCrystal();
+
+                const explanation = document.createElement('div');
+                explanation.style.position = 'absolute';
+                explanation.style.bottom = '10px';
+                explanation.style.left = '10px';
+                explanation.style.color = 'white';
+                explanation.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                explanation.style.padding = '10px';
+                explanation.innerHTML = `
+        <h3>Seed Crystal Dropped</h3>
+        <p>In the Czochralski process, a small, high-quality single crystal seed initiates growth.
+        The tetrahedral geometry represents silicon's crystal structure. The seed's orientation
+        and quality determine the grown crystal's structure, providing a template for
+        solidification. This ensures the resulting ingot is a single crystal with the desired
+        orientation.</p>
+    `;
+                document.body.appendChild(explanation);
+                setTimeout(() => document.body.removeChild(explanation), 10000); // Remove after 10 seconds
             }
+
 
             // Create silicon ingot and rod
             const ingotGeometry = new THREE.BoxGeometry(0.5, 0.2, 0.1);
@@ -234,6 +253,24 @@
                 ingotDropped = true;
                 checkPullIngotConditions();
                 animateIngot();
+               
+                // Add this at the end of the function:
+                const explanation = document.createElement('div');
+                explanation.style.position = 'absolute';
+                explanation.style.bottom = '10px';
+                explanation.style.left = '10px';
+                explanation.style.color = 'white';
+                explanation.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                explanation.style.padding = '10px';
+                explanation.innerHTML = `
+        <h3>Silicon Ingot Lowered</h3>
+        <p>The silicon ingot is lowered into the crucible containing molten silicon. This process
+        simulates adding raw material to the melt. In real crystal growth, polycrystalline silicon
+        is melted in the crucible. The ingot's controlled descent prevents thermal shock and
+        ensures gradual melting, maintaining melt purity and temperature stability.</p>
+    `;
+                document.body.appendChild(explanation);
+                setTimeout(() => document.body.removeChild(explanation), 10000); // Remove after 10 seconds
             }
 
             const particleCount = 1000;
@@ -283,6 +320,25 @@
                 } else {
                     pullIngotButton.disabled = true;
                 }
+               if (burnerOn) {
+                    const explanation = document.createElement('div');
+                    explanation.style.position = 'absolute';
+                    explanation.style.bottom = '10px';
+                    explanation.style.left = '10px';
+                    explanation.style.color = 'white';
+                    explanation.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                    explanation.style.padding = '10px';
+                    explanation.innerHTML = `
+            <h3>Furnace Activated</h3>
+            <p>The furnace heats the crucible to silicon's melting point (1414°C). Precise
+            temperature control is crucial for crystal growth. The heat creates a temperature
+            gradient in the melt, driving convection currents that affect crystal formation.
+            Particle animation represents the intense heat, essential for maintaining
+            silicon in its liquid state during the crystal growth process.</p>
+        `;
+                    document.body.appendChild(explanation);
+                    setTimeout(() => document.body.removeChild(explanation), 10000); // Remove after 10 seconds
+                }
             }
 
             function pullIngot() {
@@ -320,7 +376,7 @@
                         } else if (largeIngot.position.y < 5) {
                             largeIngot.position.y += 0.01;
                             requestAnimationFrame(animatePull);
-                        } 
+                        }
                         else {
                             isPulling = false;
                         }
@@ -328,6 +384,25 @@
 
                     animatePull();
                 }
+
+                    const explanation = document.createElement('div');
+                explanation.style.position = 'absolute';
+                explanation.style.bottom = '10px';
+                explanation.style.left = '10px';
+                explanation.style.color = 'white';
+                explanation.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                explanation.style.padding = '10px';
+                explanation.innerHTML = `
+        <h3>Crystal Growth and Pulling</h3>
+        <p>The seed crystal is slowly pulled upwards while rotating. As it's pulled, molten
+        silicon solidifies onto it, adopting the seed's crystal structure. The pull rate and
+        rotation speed are critical parameters affecting crystal diameter and quality. Slower
+        pulling generally results in larger diameter crystals. The gradual increase in crystal
+        size simulates the real growth process, where careful control of temperature gradients
+        and pull rate produces a large single crystal ingot.</p>
+    `;
+                document.body.appendChild(explanation);
+                
             }
 
             // Add event listeners
