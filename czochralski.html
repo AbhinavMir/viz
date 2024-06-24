@@ -3,56 +3,76 @@
 
 <head>
     <title>Three.js Bell Jar Vase with Crystals and Silicon Ingot</title>
+
     <style>
         body {
             margin: 0;
+            font-family: Arial, sans-serif;
         }
 
         canvas {
             display: block;
         }
 
-        #crossSectionButton,
-        #dropCrystalButton,
-        #lowerSiliconIngotButton,
-        #lightFurnaceButton {
+        #buttonContainer {
             position: absolute;
             top: 10px;
-            z-index: 100;
-        }
-
-        #pullIngotButton {
-            position: absolute;
-            top: 10px;
-            left: 570px;
-            z-index: 100;
-        }
-
-        #crossSectionButton {
             left: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 100%;
+            padding: 10px;
         }
 
-        #dropCrystalButton {
-            left: 150px;
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
         }
 
-        #lowerSiliconIngotButton {
-            left: 290px;
+        button:hover {
+            background-color: #45a049;
         }
 
-        #lightFurnaceButton {
-            left: 430px;
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 600px) {
+            #buttonContainer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+            }
         }
     </style>
+
 </head>
 
 <body>
     <canvas id="canvas"></canvas>
-    <button id="crossSectionButton">Toggle Cross Section</button>
-    <button id="lightFurnaceButton">Light up the Furnace</button>
-    <button id="dropCrystalButton">Drop Silicon</button>
-    <button id="lowerSiliconIngotButton">Lower Silicon Ingot</button>
-    <button id="pullIngotButton" disabled>Pull Ingot</button>
+    <div id="buttonContainer">
+        <button id="crossSectionButton">Toggle Cross Section</button>
+        <button id="dropCrystalButton">Drop Silicon</button>
+        <button id="lowerSiliconIngotButton">Lower Silicon Ingot</button>
+        <button id="lightFurnaceButton">Light up the Furnace</button>
+        <button id="pullIngotButton" disabled>Pull Ingot</button>
+    </div>
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
@@ -169,7 +189,7 @@
 
             // Function to create and drop a crystal
             function dropCrystal() {
-              const crystalGeometry = new THREE.TetrahedronGeometry(0.2);
+                const crystalGeometry = new THREE.TetrahedronGeometry(0.2);
                 const crystalMaterial = new THREE.MeshPhongMaterial({
                     color: 0x00ffff,
                     transparent: true,
@@ -179,7 +199,7 @@
 
 
                 // Set initial position above the lava
-                   seedCrystal.position.set(
+                seedCrystal.position.set(
                     (Math.random() - 0.5) * 4,  // Reduced range to ensure it's within the crucible
                     5,
                     (Math.random() - 0.5) * 4   // Reduced range to ensure it's within the crucible
@@ -343,7 +363,7 @@
                 }
             }
 
-         function pullIngot() {
+            function pullIngot() {
                 if (!isPulling) {
                     isPulling = true;
 
