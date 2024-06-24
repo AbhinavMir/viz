@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Silicon Lapping System Model</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<body>
+    <script type="module">
+        import('https://unpkg.com/three@0.112.1/examples/jsm/controls/OrbitControls.js').then((module) => {
+            const OrbitControls = module.OrbitControls;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Create a group for the entire assembly
+            const entireAssembly = new THREE.Group();
+            scene.add(entireAssembly);
+
+            // Create the base plate
+            const plateGeometry = new THREE.CylinderGeometry(5, 5, 0.5, 64);
+            const plateMaterial = new THREE.MeshPhongMaterial({ color: 0xdddddd });
+            const plate = new THREE.Mesh(plateGeometry, plateMaterial);
+            entireAssembly.add(plate);
+
+            // Create rotating disks with silicon wafers and smaller circles
+            const diskGeometry = new THREE.CylinderGeometry(1.2, 1.2, 0.1, 32);
+            const diskMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+            const waferGeometry = new THREE.CircleGeometry(1, 32);
+            const waferMaterial = new THREE.MeshPhongMaterial({ color: 0x4444ff });
+            const smallCircleGeometry = new THREE.CircleGeometry(0.15, 32);
+            const smallCircleMaterial = new THREE.MeshPhongMaterial({ color: 0x2222dd });
+
+            const diskGroups = [];
+
+            for (let i = 0; i < 4; i++) {
+                const angle = (i * Math.PI / 2);
+                const diskGroup = new THREE.Group();
+
+                const disk = new THREE.Mesh(diskGeometry, diskMaterial);
+                diskGroup.add(disk);
+
+                const waferGroup = new THREE.Group();
+
+                const wafer = new THREE.Mesh(waferGeometry, waferMaterial);
+                waferGroup.add(wafer);
+
+                // Add 4 small circles to the wafer
+                for (let j = 0; j < 4; j++) {
+                    const smallAngle = (j * Math.PI / 2);
+                    const smallCircle = new THREE.Mesh(smallCircleGeometry, smallCircleMaterial);
+                    smallCircle.position.set(Math.cos(smallAngle) * 0.5, Math.sin(smallAngle) * 0.5, 0.001);
+                    waferGroup.add(smallCircle);
+                }
+
+                waferGroup.rotation.x = -Math.PI / 2;
+                waferGroup.position.y = 0.051;
+                diskGroup.add(waferGroup);
+
+                diskGroup.position.set(Math.cos(angle) * 3.5, 0.3, Math.sin(angle) * 3.5);
+                entireAssembly.add(diskGroup);
+                diskGroups.push({ group: diskGroup, wafer: waferGroup });
+            }
+
+            // Create the top cylinder
+            const topGeometry = new THREE.CylinderGeometry(1, 1, 0.5, 32);
+            const topMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
+            const topCylinder = new THREE.Mesh(topGeometry, topMaterial);
+            topCylinder.position.y = 0.5;
+            entireAssembly.add(topCylinder);
+
+            // Create gear teeth (simplified)
+            const gearGeometry = new THREE.CylinderGeometry(4.8, 4.8, 0.4, 64, 1, false, 0, Math.PI * 2);
+            const gearMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            const gear = new THREE.Mesh(gearGeometry, gearMaterial);
+            gear.position.y = -0.2;
+            entireAssembly.add(gear);
+
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+
+            camera.position.z = 10;
+
+            window.addEventListener('resize', onWindowResize, false);
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+
+                // Rotate the entire assembly
+                entireAssembly.rotation.y += 0.005;
+
+                // Rotate disk groups and wafers
+                diskGroups.forEach((disk, index) => {
+                    disk.group.rotation.y += 0.01 * (index % 2 === 0 ? 1 : -1);
+                    disk.wafer.rotation.z += 0.02;
+                });
+
+                renderer.render(scene, camera);
+            }
+            animate();
+        });
+    </script>
+</body>
+
+</html>
