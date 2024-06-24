@@ -169,7 +169,7 @@
 
             // Function to create and drop a crystal
             function dropCrystal() {
-                const crystalGeometry = new THREE.TetrahedronGeometry(0.2);
+              const crystalGeometry = new THREE.TetrahedronGeometry(0.2);
                 const crystalMaterial = new THREE.MeshPhongMaterial({
                     color: 0x00ffff,
                     transparent: true,
@@ -177,12 +177,14 @@
                 });
                 seedCrystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
 
+
                 // Set initial position above the lava
-                seedCrystal.position.set(
-                    (Math.random() - 0.5) * 2,
+                   seedCrystal.position.set(
+                    (Math.random() - 0.5) * 4,  // Reduced range to ensure it's within the crucible
                     5,
-                    (Math.random() - 0.5) * 2
+                    (Math.random() - 0.5) * 4   // Reduced range to ensure it's within the crucible
                 );
+
 
                 scene.add(seedCrystal);
 
@@ -341,43 +343,30 @@
                 }
             }
 
-            function pullIngot() {
+         function pullIngot() {
                 if (!isPulling) {
                     isPulling = true;
 
-                    // Determine which object to use as the base for growing crystal
-                    let baseObject = seedDropped ? seedCrystal : siliconIngot;
+                    // Remove the original ingot
+                    siliconIngotGroup.remove(ingot);
 
-                    // Remove the original object from the scene
-
-                    // Create a larger silicon crystal based on the original object's position
-                    // scene.remove(ingot)
-                    siliconIngotGroup.remove(ingot)
+                    // Create a larger silicon crystal
                     const largeIngotGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 32);
                     const largeIngotMaterial = new THREE.MeshPhongMaterial({ color: 0xf0f0f0 });
                     const largeIngot = new THREE.Mesh(largeIngotGeometry, largeIngotMaterial);
 
-                    largeIngot.position.copy(baseObject.position);
-                    scene.add(largeIngot);
-
+                    // Center the largeIngot on the rod
+                    largeIngot.position.set(0, -1, 0);
                     siliconIngotGroup.add(largeIngot);
-                    function animatePull() {
-                        if (largeIngot.position.y < 5
 
-                            && largeIngot.scale.y < 10
-                            && largeIngot.scale.x < 10
-                            && largeIngot.scale.z < 10
-                        ) {
+                    function animatePull() {
+                        if (siliconIngotGroup.position.y < 5 && largeIngot.scale.y < 10) {
                             siliconIngotGroup.position.y += 0.01;
-                            largeIngot.scale.y += 0.05; // Grow the crystal as it's pulled
-                            largeIngot.scale.x += 0.005; // Slight increase in width
-                            largeIngot.scale.z += 0.005; // Slight increase in depth
+                            largeIngot.scale.y += 0.05;
+                            largeIngot.scale.x += 0.005;
+                            largeIngot.scale.z += 0.005;
                             requestAnimationFrame(animatePull);
-                        } else if (largeIngot.position.y < 5) {
-                            largeIngot.position.y += 0.01;
-                            requestAnimationFrame(animatePull);
-                        }
-                        else {
+                        } else {
                             isPulling = false;
                         }
                     }
